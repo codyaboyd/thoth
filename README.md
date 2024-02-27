@@ -2,6 +2,10 @@
 
 This project provides an AI-powered documentation generator that automatically creates documentation for your codebase in JavaScript (JS), TypeScript (TS), Python (PY), Rust (RS), and Solidity (SOL) files. It includes a command-line interface for generating documentation for individual files or directories, as well as a watcher service that automatically updates documentation when files change.
 
+<p align="center">
+<img src="https://github.com/codyaboyd/thoth/assets/57097960/244566cc-5a68-4bf1-8e5a-9c4c3854ee51">
+</p>
+
 ## Features
 
 - Generate documentation for individual files or entire directories.
