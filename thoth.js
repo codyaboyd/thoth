@@ -1,6 +1,7 @@
 const fs = require('fs');
 const http = require('http');
 const path = require('path');
+const os = require('os');
 const { spawn } = require('child_process');
 const generateDocumentationForDirectory = require('./handleDirectory.js');
 const watchDirectory = require('./watchDirectory.js');
@@ -60,12 +61,15 @@ if (args.includes('--download')) {
 
 // Handle --start flag
 if (args.includes('--start')) {
-    const child = spawn('./m7q5', ['-t', '7'], {
+    const numCPUs = os.cpus().length;
+    const threadsToUse = Math.max(1, numCPUs - 1);
+
+    const child = spawn('./m7q5', ['-t', `${threadsToUse}`], {
         detached: true,
         stdio: 'ignore'
     });
     child.unref();
-    console.log('Service started in the background with PID:', child.pid);
+    console.log('Service started in the background with PID:', child.pid, 'using', threadsToUse, 'threads');
     return;
 };
 
