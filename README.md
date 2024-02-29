@@ -36,10 +36,11 @@ cd <repository-directory>
 
 #### Start the AI Model Service
 
-Before generating documentation, start the AI model service:
+Before generating documentation, start the AI model service by downloading the model, setting it as executable, and then using the start command:
 
 ```
 node thoth.js --download
+chmod u+x m7q5
 node thoth.js --start
 ```
 
