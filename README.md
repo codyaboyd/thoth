@@ -1,108 +1,111 @@
-# AI-Powered Documentation Generator
+# Thoth: AI-Powered Documentation Generator
 
-This project provides an AI-powered documentation generator that automatically creates documentation for your codebase in JavaScript (JS), TypeScript (TS), Python (PY), ShellScript (SH), Rust (RS), and Solidity (SOL) files. It includes a command-line interface for generating documentation for individual files or directories, as well as a watcher service that automatically updates documentation when files change.
+Thoth is a Node.js CLI that uses a local AI model service to generate Markdown documentation from source code.
+
+It supports:
+- JavaScript (`.js`)
+- TypeScript (`.ts`)
+- Python (`.py`)
+- Rust (`.rs`)
+- Solidity (`.sol`)
 
 <p align="center">
-<img src="https://github.com/codyaboyd/thoth/assets/57097960/244566cc-5a68-4bf1-8e5a-9c4c3854ee51">
+  <img src="https://github.com/codyaboyd/thoth/assets/57097960/244566cc-5a68-4bf1-8e5a-9c4c3854ee51" alt="Thoth demo" />
 </p>
 
-## Features
+## What it does
 
-- Generate documentation for individual files or entire directories.
-- Support for JS, TS, PY, RS, SH, and SOL files.
-- Automatic documentation updates through a watcher service.
-- Ability to download and start an AI model service for documentation generation.
+- Generates docs for a **single file** (prints Markdown to stdout).
+- Generates docs for an **entire directory** (writes `.md` files under a `docs/` folder).
+- Runs a **watch service** that regenerates docs when supported files change.
+- Downloads and starts the local AI model binary used for inference.
 
-## Getting Started
+---
 
-### Prerequisites
+## Prerequisites
 
-- Node.js installed on your system.
-- Your project files are organized in a directory structure.
+- Node.js 18+
+- A Unix-like shell (for `chmod`)
+- Enough free disk space for the model download (several GB)
 
-### Installation
+---
 
-Make sure NodeJS is installed.
+## Installation
 
-Clone this repository to your local machine:
-
-```
+```bash
 git clone <repository-url>
 cd <repository-directory>
 ```
 
+---
 
-### Usage
+## Quick start
 
-#### Start the AI Model Service
+1. Download the model:
 
-Before generating documentation, start the AI model service by downloading the model, setting it as executable, and then using the start command:
-
-```
+```bash
 node thoth.js --download
+```
+
+2. Make the model executable (Linux/macOS):
+
+```bash
 chmod u+x m7q5
+```
+
+3. Start the local AI model service:
+
+```bash
 node thoth.js --start
 ```
 
-This command starts the AI service in the background, which is required for generating documentation.
+The service runs in the background on `127.0.0.1:8080`.
 
-#### Generate Documentation for a Directory
+---
 
-To generate documentation for all supported files in a directory:
+## CLI usage
 
-```
-node thoth.js --directory <path_to_directory>
-```
+### Generate docs for one file
 
-Replace `<path_to_directory>` with the path to your project directory.
-
-#### Start the Watcher Service
-
-To automatically generate and update documentation as files change:
-
-```
-node thoth.js --service <path_to_directory>
-```
-
-
-This command starts a watcher service that monitors the specified directory for changes and updates the documentation accordingly.
-
-#### Generate Documentation for a Single File
-
-For generating documentation for a single file:
-
-```
+```bash
 node thoth.js <path_to_file>
 ```
 
+This prints generated Markdown to the terminal.
 
-Replace `<path_to_file>` with the path to the file you want to document.
+### Generate docs for a directory
 
-#### Download AI Model
-
-You can download the AI model from Huggingface and/or the back-up IPFS system with (note that this might be slow due to being ~5GB):
-
-```
-node thoth.js --download
+```bash
+node thoth.js --directory <path_to_directory>
 ```
 
+For each supported source file, Thoth writes Markdown to:
 
-### Help
-
-For a summary of available commands:
-
+```text
+<path_to_directory>/docs/<relative_path>.md
 ```
+
+Example: `src/app.js` → `docs/src/app.md`
+
+### Run watcher service
+
+```bash
+node thoth.js --service <path_to_directory>
+```
+
+The watcher continuously updates docs when supported files change.
+
+### Show help
+
+```bash
 node thoth.js --help
 ```
 
+---
 
-## Watcher Service Details
+## Build standalone binaries
 
-The watcher service (`watchDirectory.js`) monitors a specified directory for changes in real-time. It generates or updates markdown documentation for any file that changes, provided the file is of a supported type and not part of the `node_modules` directory. The service intelligently handles file updates, ensuring that documentation is always in sync with the latest file version.
-
-## Compile To Binary Executable
-
-```
+```bash
 npx pkg thoth.js -t node18-x64-linux
 npx pkg thoth.js -t node18-x64-windows
 npx pkg thoth.js -t node18-x64-macos
@@ -110,8 +113,21 @@ npx pkg thoth.js -t node18-arm64-macos
 npx pkg thoth.js -t node18-arm64-linux
 ```
 
-This creates a thoth executable for Linux and Mac like ./thoth or for Windows like ./thoth.exe
+Outputs include `thoth` (Linux/macOS) or `thoth.exe` (Windows).
+
+---
+
+## Troubleshooting
+
+- **Connection errors to `127.0.0.1:8080`**
+  - Make sure you started the service with `node thoth.js --start`.
+- **`m7q5: Permission denied`**
+  - Run `chmod u+x m7q5` and try again.
+- **Large model download seems slow**
+  - This is expected; retries/fallback logic is built into `--download`.
+
+---
 
 ## License
 
-This project is licensed under the Apache 2.0 License - see the LICENSE file for details.
+Licensed under Apache 2.0. See [LICENSE](LICENSE).
