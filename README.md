@@ -1,6 +1,7 @@
 # Thoth: AI-Powered Documentation Generator
 
 Thoth is a Node.js CLI that uses a local AI model service to generate Markdown documentation from source code.
+It can also optionally call cloud APIs (GPT, Claude, Gemini, and LeChat/Mistral).
 
 It supports major code file types across common ecosystems, including:
 - JavaScript / Node (`.js`, `.mjs`, `.cjs`, `.jsx`)
@@ -66,6 +67,35 @@ The service runs in the background on `127.0.0.1:8080`.
 ---
 
 ## CLI usage
+
+### Choose an LLM provider (optional)
+
+By default, Thoth uses the local llamafile service (`local` provider).
+
+You can switch providers using flags:
+
+```bash
+node thoth.js --provider openai --model gpt-4o-mini --api-key $OPENAI_API_KEY src/app.js
+node thoth.js --provider claude --model claude-3-5-haiku-latest --api-key $ANTHROPIC_API_KEY src/app.js
+node thoth.js --provider gemini --model gemini-1.5-flash --api-key $GEMINI_API_KEY src/app.js
+node thoth.js --provider lechat --model mistral-small-latest --api-key $MISTRAL_API_KEY src/app.js
+```
+
+Or use environment variables:
+
+```bash
+export THOTH_PROVIDER=openai
+export THOTH_MODEL=gpt-4o-mini
+export OPENAI_API_KEY=...
+node thoth.js src/app.js
+```
+
+Supported provider values:
+- `local` (default; llamafile)
+- `openai` (GPT)
+- `claude` (Anthropic)
+- `gemini` (Google)
+- `lechat` (Mistral/LeChat API)
 
 ### Generate docs for one file
 

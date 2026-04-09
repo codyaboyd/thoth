@@ -15,7 +15,7 @@ async function generateForSingleFile(filePath, data) {
         console.log(content);
     } catch (error) {
         console.error(error.message);
-        console.log('Please make sure ./m7q5 AI node is activated.');
+        console.log('If using local provider, make sure ./m7q5 service is active. For cloud providers, verify API key and model.');
     }
 }
 

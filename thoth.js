@@ -32,15 +32,45 @@ function printHelp() {
      node thoth.js --download
 
     Start AI model service:
-     node thoth.js --start`
+     node thoth.js --start
+
+    Optional provider settings:
+     --provider <local|openai|claude|gemini|lechat>
+     --model <model_name>
+     --api-key <api_key>
+     --host <local_model_host> --port <local_model_port>`
   );
 };
+
+function getArgValue(flag) {
+    const index = args.indexOf(flag);
+    if (index !== -1 && args.length > index + 1) {
+        return args[index + 1];
+    }
+    return undefined;
+}
+
+function applyProviderArgs() {
+    const provider = getArgValue('--provider');
+    const model = getArgValue('--model');
+    const apiKey = getArgValue('--api-key');
+    const host = getArgValue('--host');
+    const port = getArgValue('--port');
+
+    if (provider) process.env.THOTH_PROVIDER = provider;
+    if (model) process.env.THOTH_MODEL = model;
+    if (apiKey) process.env.THOTH_API_KEY = apiKey;
+    if (host) process.env.THOTH_API_HOST = host;
+    if (port) process.env.THOTH_API_PORT = port;
+}
 
 // Handle --help flag
 if (args.includes('--help')) {
     printHelp();
     return;
 };
+
+applyProviderArgs();
 
 // Handle --download flag
 if (args.includes('--download')) {
