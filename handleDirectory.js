@@ -1,14 +1,13 @@
 const fs = require('fs').promises;
 const http = require('http');
 const path = require('path');
-const { getLanguageFromExtension,isValidFileType } = require('./utils.js');
+const { getLanguageFromExtension, isValidFileType, getMarkdownPathFromRelativePath } = require('./utils.js');
 
 class DocumentationGenerator {
     constructor() {
         this.apiHost = '127.0.0.1';
         this.apiPort = 8080;
-        // Base prompt without specifying the language
-        this.basePrompt = "Write documentation to describe the logic in the following code using markdown: ";
+        this.basePrompt = 'Write documentation to describe the logic in the following code using markdown.';
     }
 
     async generateForDirectory(directoryPath) {
@@ -17,7 +16,7 @@ class DocumentationGenerator {
 
     async processDirectory(currentPath, rootPath) {
         const entries = await fs.readdir(currentPath, { withFileTypes: true });
-        for (let entry of entries) {
+        for (const entry of entries) {
             const fullPath = path.join(currentPath, entry.name);
             if (entry.isDirectory()) {
                 await this.processDirectory(fullPath, rootPath);
@@ -31,15 +30,15 @@ class DocumentationGenerator {
         console.log('Processing: ' + filePath);
         const data = await fs.readFile(filePath, { encoding: 'utf8' });
         const language = getLanguageFromExtension(filePath);
-        const documentation = await this.generateDocumentation(data, language);
+        const documentation = await this.generateDocumentation(data, language, filePath);
         const relativePath = path.relative(rootPath, filePath);
-        const markdownPath = path.join(rootPath, 'docs', relativePath.replace(/\.(js|py|sol|rs|ts)$/, '.md'));
+        const markdownPath = path.join(rootPath, 'docs', getMarkdownPathFromRelativePath(relativePath));
         await this.saveFile(markdownPath, documentation);
         console.log('Completed: ' + filePath);
     }
 
-    async generateDocumentation(fileContent, language) {
-        const prompt = `${this.basePrompt} [${language}] ` + fileContent;
+    async generateDocumentation(fileContent, language, filePath) {
+        const prompt = `${this.basePrompt}\nLanguage: ${language}\nFile: ${filePath}\n\nCode:\n${fileContent}`;
         const postData = JSON.stringify({ prompt: '[INST]' + prompt + '[/INST]' });
 
         const options = {

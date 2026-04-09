@@ -2,12 +2,14 @@
 
 Thoth is a Node.js CLI that uses a local AI model service to generate Markdown documentation from source code.
 
-It supports:
-- JavaScript (`.js`)
-- TypeScript (`.ts`)
+It supports major code file types across common ecosystems, including:
+- JavaScript / Node (`.js`, `.mjs`, `.cjs`, `.jsx`)
+- TypeScript (`.ts`, `.tsx`)
 - Python (`.py`)
-- Rust (`.rs`)
-- Solidity (`.sol`)
+- JVM languages (`.java`, `.kt`, `.kts`, `.scala`)
+- Systems languages (`.c`, `.h`, `.cpp`, `.cc`, `.cxx`, `.hpp`, `.rs`)
+- Web languages (`.html`, `.css`, `.scss`, `.sass`, `.less`, `.vue`, `.svelte`)
+- Plus additional major formats (`.cs`, `.go`, `.rb`, `.php`, `.swift`, `.sol`, `.sh`, `.bash`, `.zsh`, `.ps1`, `.r`, `.lua`, `.pl`, `.sql`, `.dart`, `.ex`, `.exs`, `.erl`, `.hrl`)
 
 <p align="center">
   <img src="https://github.com/codyaboyd/thoth/assets/57097960/244566cc-5a68-4bf1-8e5a-9c4c3854ee51" alt="Thoth demo" />
@@ -93,7 +95,7 @@ Example: `src/app.js` → `docs/src/app.md`
 node thoth.js --service <path_to_directory>
 ```
 
-The watcher continuously updates docs when supported files change.
+The watcher continuously updates docs when supported files change. Prompt context includes the source file path and detected language for every generation.
 
 ### Show help
 
