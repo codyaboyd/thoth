@@ -1,7 +1,7 @@
 const fs = require('fs').promises;
-const http = require('http');
 const path = require('path');
 const { getLanguageFromExtension, isValidFileType, getMarkdownPathFromRelativePath } = require('./utils.js');
+const { generateDocumentation } = require('./aiClient.js');
 
 class DocumentationGenerator {
     constructor() {
@@ -38,40 +38,13 @@ class DocumentationGenerator {
     }
 
     async generateDocumentation(fileContent, language, filePath) {
-        const prompt = `${this.basePrompt}\nLanguage: ${language}\nFile: ${filePath}\n\nCode:\n${fileContent}`;
-        const postData = JSON.stringify({ prompt: '[INST]' + prompt + '[/INST]' });
-
-        const options = {
-            hostname: this.apiHost,
+        return generateDocumentation({
+            fileContent,
+            language,
+            filePath,
+            basePrompt: this.basePrompt,
+            host: this.apiHost,
             port: this.apiPort,
-            path: '/completion',
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Content-Length': Buffer.byteLength(postData),
-            },
-        };
-
-        return new Promise((resolve, reject) => {
-            const req = http.request(options, (res) => {
-                let rawData = '';
-                res.on('data', (chunk) => { rawData += chunk; });
-                res.on('end', () => {
-                    try {
-                        const parsedData = JSON.parse(rawData);
-                        resolve(parsedData.content || '');
-                    } catch (e) {
-                        reject(`Error parsing response: ${e.message}`);
-                    }
-                });
-            });
-
-            req.on('error', (e) => {
-                reject(`Problem with request: ${e.message}`);
-            });
-
-            req.write(postData);
-            req.end();
         });
     }
 
