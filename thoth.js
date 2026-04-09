@@ -7,6 +7,7 @@ const generateDocumentationForDirectory = require('./handleDirectory.js');
 const watchDirectory = require('./watchDirectory.js');
 const { generateForSingleFile } = require('./singleGen.js');
 const { reassembleModel, downloadFileHF } = require('./getModel.js');
+const { buildHtmlDocumentationPackage } = require('./htmlPackage.js');
 
 // Process command line arguments
 const args = process.argv.slice(2);
@@ -21,6 +22,9 @@ function printHelp() {
     `Usage:
     Generate documentation for a directory:
      node thoth.js --directory <path_to_directory>
+
+    Build HTML documentation package from existing markdown docs:
+     node thoth.js --html-package <path_to_directory>
 
     Start a watcher service to automatically manage documentation:
      node thoth.js --service <path_to_directory>
@@ -109,10 +113,28 @@ if (args.includes('--directory')) {
     if (directoryIndex !== -1 && args.length > directoryIndex + 1) {
         const directoryPath = args[directoryIndex + 1];
         generateDocumentationForDirectory(directoryPath)
-            .then(() => console.log('Documentation generation complete.'))
+            .then(async () => {
+                console.log('Documentation generation complete.');
+                const htmlPackage = await buildHtmlDocumentationPackage(directoryPath);
+                console.log(`HTML documentation package complete (${htmlPackage.documentCount} docs): ${htmlPackage.outputDirectory}`);
+            })
             .catch((error) => console.error(`Error generating documentation: ${error}`));
     } else {
         console.error('Usage: node script.js --directory <path_to_directory>');
+    }
+    return;
+};
+
+// Handle --html-package option
+if (args.includes('--html-package')) {
+    const htmlPackageIndex = args.indexOf('--html-package');
+    if (htmlPackageIndex !== -1 && args.length > htmlPackageIndex + 1) {
+        const directoryPath = args[htmlPackageIndex + 1];
+        buildHtmlDocumentationPackage(directoryPath)
+            .then((result) => console.log(`HTML documentation package complete (${result.documentCount} docs): ${result.outputDirectory}`))
+            .catch((error) => console.error(`Error generating HTML package: ${error}`));
+    } else {
+        console.error('Usage: node script.js --html-package <path_to_directory>');
     }
     return;
 };

@@ -20,6 +20,7 @@ It supports major code file types across common ecosystems, including:
 
 - Generates docs for a **single file** (prints Markdown to stdout).
 - Generates docs for an **entire directory** (writes `.md` files under a `docs/` folder).
+- Builds an **HTML documentation package** from generated Markdown with a modern, neumorphic UI.
 - Runs a **watch service** that regenerates docs when supported files change.
 - Downloads and starts the local AI model binary used for inference.
 
@@ -118,6 +119,21 @@ For each supported source file, Thoth writes Markdown to:
 ```
 
 Example: `src/app.js` → `docs/src/app.md`
+
+After generating markdown, Thoth now also produces:
+
+```text
+<path_to_directory>/docs-html/index.html
+<path_to_directory>/docs-html/styles.css
+```
+
+The HTML package uses a responsive, modern neumorphic design for easy browsing.
+
+### Build HTML package from existing docs only
+
+```bash
+node thoth.js --html-package <path_to_directory>
+```
 
 ### Run watcher service
 
