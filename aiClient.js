@@ -3,7 +3,11 @@ const https = require('https');
 
 const DEFAULT_HOST = '127.0.0.1';
 const DEFAULT_PORT = 8080;
-const DEFAULT_BASE_PROMPT = 'Write documentation to describe the logic in the following code using markdown.';
+const DEFAULT_BASE_PROMPT = [
+    'Write markdown documentation that explains only the logic present in the provided code.',
+    'Do not invent behavior, files, APIs, or assumptions not shown in the snippet.',
+    'If important context is missing, explicitly state what is unknown.',
+].join(' ');
 const DEFAULT_PROVIDER = 'local';
 
 const PROVIDERS = {
@@ -79,9 +83,13 @@ function requestCompletion(prompt, { host = DEFAULT_HOST, port = DEFAULT_PORT } 
             let rawData = '';
             res.on('data', (chunk) => { rawData += chunk; });
             res.on('end', () => {
+                if (res.statusCode < 200 || res.statusCode >= 300) {
+                    reject(new Error(`Local provider request failed (${res.statusCode}): ${rawData}`));
+                    return;
+                }
                 try {
                     const parsedData = JSON.parse(rawData);
-                    resolve(parsedData.content || '');
+                    resolve(parsedData.content || parsedData.response || parsedData.text || '');
                 } catch (error) {
                     reject(new Error(`Error parsing response: ${error.message}`));
                 }
@@ -127,6 +135,10 @@ function requestJson({
             res.on('end', () => {
                 if (res.statusCode < 200 || res.statusCode >= 300) {
                     return reject(new Error(`Provider request failed (${res.statusCode}): ${rawData}`));
+                }
+                if (!rawData.trim()) {
+                    resolve({});
+                    return;
                 }
                 try {
                     const parsedData = JSON.parse(rawData);

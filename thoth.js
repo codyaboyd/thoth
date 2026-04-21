@@ -1,6 +1,4 @@
 const fs = require('fs');
-const http = require('http');
-const path = require('path');
 const os = require('os');
 const { spawn } = require('child_process');
 const generateDocumentationForDirectory = require('./handleDirectory.js');
@@ -112,7 +110,7 @@ if (args.includes('--directory')) {
             .then(() => console.log('Documentation generation complete.'))
             .catch((error) => console.error(`Error generating documentation: ${error}`));
     } else {
-        console.error('Usage: node script.js --directory <path_to_directory>');
+        console.error('Usage: node thoth.js --directory <path_to_directory>');
     }
     return;
 };
@@ -124,7 +122,7 @@ if (args.includes('--service')) {
         const directoryPath = args[directoryIndex + 1];
         watchDirectory(directoryPath);
     } else {
-        console.error('Usage: node script.js --service <path_to_directory>');
+        console.error('Usage: node thoth.js --service <path_to_directory>');
     }
     return;
 };

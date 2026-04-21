@@ -2,13 +2,13 @@ const fs = require('fs');
 const crypto = require('crypto');
 const path = require('path');
 const { getLanguageFromExtension, isValidFileType, getMarkdownPathFromRelativePath } = require('./utils.js');
-const { generateDocumentation } = require('./aiClient.js');
+const { generateDocumentation, DEFAULT_BASE_PROMPT } = require('./aiClient.js');
 
 class DocumentationGenerator {
     constructor() {
         this.apiHost = '127.0.0.1';
         this.apiPort = 8080;
-        this.basePrompt = 'Write documentation to describe the logic in the following code using markdown.';
+        this.basePrompt = DEFAULT_BASE_PROMPT;
         this.fileHashes = new Map();
         this.processingFiles = new Map();
     }
@@ -45,22 +45,27 @@ class DocumentationGenerator {
 
     async handleFileChange(filePath, rootPath) {
         this.processingFiles.set(filePath, { ...this.processingFiles.get(filePath), processing: true, status: 'processing' });
-        const exists = fs.existsSync(filePath);
-        if (!exists) {
-            this.fileHashes.delete(filePath);
-            const markdownPath = this.getMarkdownPath(filePath, rootPath);
-            if (fs.existsSync(markdownPath)) {
-                fs.promises.unlink(markdownPath);
-            }
-            this.processingFiles.delete(filePath);
-        } else {
-            await this.processFile(filePath, rootPath);
-            if (this.processingFiles.get(filePath)?.status === 'updated') {
-                this.handleFileChange(filePath, rootPath);
-                console.log('File updated: ' + filePath);
-            } else {
+        try {
+            const exists = fs.existsSync(filePath);
+            if (!exists) {
+                this.fileHashes.delete(filePath);
+                const markdownPath = this.getMarkdownPath(filePath, rootPath);
+                if (fs.existsSync(markdownPath)) {
+                    await fs.promises.unlink(markdownPath);
+                }
                 this.processingFiles.delete(filePath);
+            } else {
+                await this.processFile(filePath, rootPath);
+                if (this.processingFiles.get(filePath)?.status === 'updated') {
+                    this.handleFileChange(filePath, rootPath);
+                    console.log('File updated: ' + filePath);
+                } else {
+                    this.processingFiles.delete(filePath);
+                }
             }
+        } catch (error) {
+            console.error(`Failed processing ${filePath}: ${error.message}`);
+            this.processingFiles.delete(filePath);
         }
     }
 
