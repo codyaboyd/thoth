@@ -1,13 +1,13 @@
 const fs = require('fs').promises;
 const path = require('path');
 const { getLanguageFromExtension, isValidFileType, getMarkdownPathFromRelativePath } = require('./utils.js');
-const { generateDocumentation } = require('./aiClient.js');
+const { generateDocumentation, DEFAULT_BASE_PROMPT } = require('./aiClient.js');
 
 class DocumentationGenerator {
     constructor() {
         this.apiHost = '127.0.0.1';
         this.apiPort = 8080;
-        this.basePrompt = 'Write documentation to describe the logic in the following code using markdown.';
+        this.basePrompt = DEFAULT_BASE_PROMPT;
     }
 
     async generateForDirectory(directoryPath) {
@@ -21,7 +21,11 @@ class DocumentationGenerator {
             if (entry.isDirectory()) {
                 await this.processDirectory(fullPath, rootPath);
             } else if (entry.isFile() && isValidFileType(entry.name)) {
-                await this.processFile(fullPath, rootPath);
+                try {
+                    await this.processFile(fullPath, rootPath);
+                } catch (error) {
+                    console.error(`Failed to process ${fullPath}: ${error.message}`);
+                }
             }
         }
     }

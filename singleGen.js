@@ -1,8 +1,8 @@
 const { getLanguageFromExtension } = require('./utils.js');
-const { generateDocumentation } = require('./aiClient.js');
+const { generateDocumentation, DEFAULT_BASE_PROMPT } = require('./aiClient.js');
 
 async function generateForSingleFile(filePath, data) {
-    const basePrompt = 'Write documentation to describe the logic in the following code using markdown.';
+    const basePrompt = DEFAULT_BASE_PROMPT;
     const language = getLanguageFromExtension(filePath);
 
     try {
