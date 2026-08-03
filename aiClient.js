@@ -260,6 +260,8 @@ async function generateDocumentation({
     promptTemplate,
 }) {
     const config = resolveConfig({ provider, model, apiKey, host, port, promptTemplate });
+    let response;
+
     if (config.provider === PROVIDERS.LOCAL) {
         const localPrompt = buildPrompt({
             fileContent,
@@ -268,29 +270,27 @@ async function generateDocumentation({
             basePrompt,
             promptTemplate: config.promptTemplate,
         });
-        return requestCompletion(localPrompt, { host: config.host, port: config.port });
-    }
-
-    if (![PROVIDERS.OPENAI, PROVIDERS.CLAUDE, PROVIDERS.GEMINI, PROVIDERS.LECHAT].includes(config.provider)) {
+        response = await requestCompletion(localPrompt, { host: config.host, port: config.port });
+    } else if (![PROVIDERS.OPENAI, PROVIDERS.CLAUDE, PROVIDERS.GEMINI, PROVIDERS.LECHAT].includes(config.provider)) {
         throw new Error(`Unsupported provider "${config.provider}". Use local|openai|claude|gemini|lechat.`);
-    }
-
-    if (!config.apiKey) {
+    } else if (!config.apiKey) {
         throw new Error(`Missing API key for provider "${config.provider}". Set --api-key or relevant env var.`);
+    } else {
+        const cloudPrompt = buildCloudPrompt({ fileContent, language, filePath, basePrompt });
+
+        if (config.provider === PROVIDERS.OPENAI) {
+            response = await requestOpenAICompletion(cloudPrompt, config);
+        } else if (config.provider === PROVIDERS.CLAUDE) {
+            response = await requestClaudeCompletion(cloudPrompt, config);
+        } else if (config.provider === PROVIDERS.GEMINI) {
+            response = await requestGeminiCompletion(cloudPrompt, config);
+        } else {
+            response = await requestLeChatCompletion(cloudPrompt, config);
+        }
     }
 
-    const cloudPrompt = buildCloudPrompt({ fileContent, language, filePath, basePrompt });
-
-    if (config.provider === PROVIDERS.OPENAI) {
-        return requestOpenAICompletion(cloudPrompt, config);
-    }
-    if (config.provider === PROVIDERS.CLAUDE) {
-        return requestClaudeCompletion(cloudPrompt, config);
-    }
-    if (config.provider === PROVIDERS.GEMINI) {
-        return requestGeminiCompletion(cloudPrompt, config);
-    }
-    return requestLeChatCompletion(cloudPrompt, config);
+    console.log(`[${config.provider}] LLM response for ${filePath}:\n${response}`);
+    return response;
 }
 
 module.exports = {
