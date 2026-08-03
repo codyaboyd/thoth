@@ -20,6 +20,7 @@ It supports major code file types across common ecosystems, including:
 
 - Generates docs for a **single file** (prints Markdown to stdout).
 - Generates docs for an **entire directory** (writes `.md` files under a `docs/` folder).
+- Generates a polished, single **codebase PDF** containing AI documentation and source for every supported file.
 - Runs a **watch service** that regenerates docs when supported files change.
 - Downloads and starts the local AI model binary used for inference.
 
@@ -118,6 +119,21 @@ For each supported source file, Thoth writes Markdown to:
 ```
 
 Example: `src/app.js` → `docs/src/app.md`
+
+### Generate a complete codebase PDF
+
+```bash
+node thoth.js --pdf <path_to_directory> \\
+  --title "Platform Engineering Handbook" \\
+  --organization "Example Corporation" \\
+  --output ./artifacts/platform-handbook.pdf
+```
+
+The PDF mode recursively discovers supported code files, skipping common generated and dependency
+directories (including `.git`, `node_modules`, `docs`, `coverage`, `dist`, and `build`). It creates one
+professional document with a branded cover, contents, per-file AI-generated explanations, complete
+source listings, running headers, and page numbers. `--title` and `--organization` are required;
+`--output` defaults to `<path_to_directory>/codebase-documentation.pdf`.
 
 ### Run watcher service
 
