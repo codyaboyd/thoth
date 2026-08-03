@@ -9,6 +9,12 @@ const DEFAULT_BASE_PROMPT = [
     'If important context is missing, explicitly state what is unknown.',
 ].join(' ');
 const DEFAULT_PROVIDER = 'local';
+const DEFAULT_PROMPT_TEMPLATE = 'mistral';
+
+const PROMPT_TEMPLATES = {
+    MISTRAL: 'mistral',
+    QWEN: 'qwen',
+};
 
 const PROVIDERS = {
     LOCAL: 'local',
@@ -25,8 +31,30 @@ const DEFAULT_MODEL_BY_PROVIDER = {
     [PROVIDERS.LECHAT]: 'mistral-small-latest',
 };
 
-function buildPrompt({ fileContent, language, filePath, basePrompt = DEFAULT_BASE_PROMPT }) {
-    return `[INST]${basePrompt}\nLanguage: ${language}\nFile: ${filePath}\n\nCode:\n${fileContent}[/INST]`;
+function normalizePromptTemplate(promptTemplate) {
+    const normalizedTemplate = (promptTemplate || DEFAULT_PROMPT_TEMPLATE).toLowerCase();
+    if (normalizedTemplate === 'mistral-instruct') return PROMPT_TEMPLATES.MISTRAL;
+    if (!Object.values(PROMPT_TEMPLATES).includes(normalizedTemplate)) {
+        throw new Error(`Unsupported prompt template "${promptTemplate}". Use mistral|qwen.`);
+    }
+    return normalizedTemplate;
+}
+
+function buildPrompt({
+    fileContent,
+    language,
+    filePath,
+    basePrompt = DEFAULT_BASE_PROMPT,
+    promptTemplate = DEFAULT_PROMPT_TEMPLATE,
+}) {
+    const normalizedTemplate = normalizePromptTemplate(promptTemplate);
+    const userPrompt = `Language: ${language}\nFile: ${filePath}\n\nCode:\n${fileContent}`;
+
+    if (normalizedTemplate === PROMPT_TEMPLATES.QWEN) {
+        return `<|im_start|>system\n${basePrompt}<|im_end|>\n<|im_start|>user\n${userPrompt}<|im_end|>\n<|im_start|>assistant\n`;
+    }
+
+    return `[INST]${basePrompt}\n${userPrompt}[/INST]`;
 }
 
 function buildCloudPrompt({ fileContent, language, filePath, basePrompt = DEFAULT_BASE_PROMPT }) {
@@ -53,6 +81,7 @@ function resolveConfig({
     apiKey = process.env.THOTH_API_KEY,
     host = process.env.THOTH_API_HOST || DEFAULT_HOST,
     port = process.env.THOTH_API_PORT || DEFAULT_PORT,
+    promptTemplate = process.env.THOTH_PROMPT_TEMPLATE || DEFAULT_PROMPT_TEMPLATE,
 } = {}) {
     const normalizedProvider = normalizeProvider(provider);
     return {
@@ -61,6 +90,7 @@ function resolveConfig({
         apiKey: getApiKeyForProvider(normalizedProvider, apiKey),
         host,
         port: Number(port),
+        promptTemplate: normalizePromptTemplate(promptTemplate),
     };
 }
 
@@ -227,10 +257,17 @@ async function generateDocumentation({
     apiKey,
     host,
     port,
+    promptTemplate,
 }) {
-    const config = resolveConfig({ provider, model, apiKey, host, port });
+    const config = resolveConfig({ provider, model, apiKey, host, port, promptTemplate });
     if (config.provider === PROVIDERS.LOCAL) {
-        const localPrompt = buildPrompt({ fileContent, language, filePath, basePrompt });
+        const localPrompt = buildPrompt({
+            fileContent,
+            language,
+            filePath,
+            basePrompt,
+            promptTemplate: config.promptTemplate,
+        });
         return requestCompletion(localPrompt, { host: config.host, port: config.port });
     }
 
@@ -261,7 +298,10 @@ module.exports = {
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_PROVIDER,
+    DEFAULT_PROMPT_TEMPLATE,
+    PROMPT_TEMPLATES,
     buildPrompt,
+    normalizePromptTemplate,
     requestCompletion,
     resolveConfig,
     generateDocumentation,

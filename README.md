@@ -98,6 +98,27 @@ Supported provider values:
 - `gemini` (Google)
 - `lechat` (Mistral/LeChat API)
 
+### Choose a local prompt template (optional)
+
+Local generation uses the Mistral instruct format by default. You can explicitly select either the
+Mistral instruct or Qwen chat format with `--prompt-template`:
+
+```bash
+node thoth.js --prompt-template mistral src/app.js
+node thoth.js --prompt-template qwen src/app.js
+```
+
+The setting applies to single-file, directory, PDF, and watcher generation. It can also be set with
+the `THOTH_PROMPT_TEMPLATE` environment variable:
+
+```bash
+export THOTH_PROMPT_TEMPLATE=qwen
+node thoth.js --directory ./src
+```
+
+Supported values are `mistral` (the default; `mistral-instruct` is also accepted) and `qwen`.
+Cloud providers use their native chat APIs and do not wrap prompts in either local-model format.
+
 ### Generate docs for one file
 
 ```bash
