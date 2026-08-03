@@ -6,13 +6,12 @@ async function generateForSingleFile(filePath, data) {
     const language = getLanguageFromExtension(filePath);
 
     try {
-        const content = await generateDocumentation({
+        await generateDocumentation({
             fileContent: data,
             language,
             filePath,
             basePrompt,
         });
-        console.log(content);
     } catch (error) {
         console.error(error.message);
         console.log('If using local provider, make sure ./m7q5 service is active. For cloud providers, verify API key and model.');

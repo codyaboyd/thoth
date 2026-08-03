@@ -22,6 +22,7 @@ It supports major code file types across common ecosystems, including:
 - Generates docs for an **entire directory** (writes `.md` files under a `docs/` folder).
 - Generates a polished, single **codebase PDF** containing AI documentation and source for every supported file.
 - Runs a **watch service** that regenerates docs when supported files change.
+- Prints each LLM response to stdout for generation progress and debugging.
 - Downloads and starts the local AI model binary used for inference.
 
 ---
