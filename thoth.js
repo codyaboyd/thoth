@@ -5,6 +5,7 @@ const generateDocumentationForDirectory = require('./handleDirectory.js');
 const watchDirectory = require('./watchDirectory.js');
 const { generateForSingleFile } = require('./singleGen.js');
 const { reassembleModel, downloadFileHF } = require('./getModel.js');
+const { generatePdfForDirectory } = require('./pdfGenerator.js');
 
 // Process command line arguments
 const args = process.argv.slice(2);
@@ -19,6 +20,9 @@ function printHelp() {
     `Usage:
     Generate documentation for a directory:
      node thoth.js --directory <path_to_directory>
+
+    Generate one complete codebase PDF:
+     node thoth.js --pdf <path> --title <title> --organization <name> [--output <file.pdf>]
 
     Start a watcher service to automatically manage documentation:
      node thoth.js --service <path_to_directory>
@@ -69,6 +73,26 @@ if (args.includes('--help')) {
 };
 
 applyProviderArgs();
+
+// Handle complete codebase PDF generation
+if (args.includes('--pdf')) {
+    const directoryPath = getArgValue('--pdf');
+    const title = getArgValue('--title');
+    const organization = getArgValue('--organization');
+    const outputPath = getArgValue('--output');
+    if (!directoryPath || !title || !organization) {
+        console.error('Usage: node thoth.js --pdf <path> --title <title> --organization <name> [--output <file.pdf>]');
+        process.exitCode = 1;
+    } else {
+        generatePdfForDirectory(directoryPath, { title, organization, outputPath })
+            .then(result => console.log(`PDF documentation complete: ${result.outputPath} (${result.fileCount} files, ${result.pageCount} pages)`))
+            .catch(error => {
+                console.error(`Error generating PDF documentation: ${error.message}`);
+                process.exitCode = 1;
+            });
+    }
+    return;
+}
 
 // Handle --download flag
 if (args.includes('--download')) {
