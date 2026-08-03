@@ -40,7 +40,8 @@ function printHelp() {
      --provider <local|openai|claude|gemini|lechat>
      --model <model_name>
      --api-key <api_key>
-     --host <local_model_host> --port <local_model_port>`
+     --host <local_model_host> --port <local_model_port>
+     --prompt-template <mistral|qwen>`
   );
 };
 
@@ -52,18 +53,38 @@ function getArgValue(flag) {
     return undefined;
 }
 
+function getPositionalArgs() {
+    const flagsWithValues = new Set([
+        '--directory', '--pdf', '--title', '--organization', '--output', '--service',
+        '--provider', '--model', '--api-key', '--host', '--port', '--prompt-template',
+    ]);
+    const positionalArgs = [];
+
+    for (let index = 0; index < args.length; index += 1) {
+        if (flagsWithValues.has(args[index])) {
+            index += 1;
+        } else if (!args[index].startsWith('--')) {
+            positionalArgs.push(args[index]);
+        }
+    }
+
+    return positionalArgs;
+}
+
 function applyProviderArgs() {
     const provider = getArgValue('--provider');
     const model = getArgValue('--model');
     const apiKey = getArgValue('--api-key');
     const host = getArgValue('--host');
     const port = getArgValue('--port');
+    const promptTemplate = getArgValue('--prompt-template');
 
     if (provider) process.env.THOTH_PROVIDER = provider;
     if (model) process.env.THOTH_MODEL = model;
     if (apiKey) process.env.THOTH_API_KEY = apiKey;
     if (host) process.env.THOTH_API_HOST = host;
     if (port) process.env.THOTH_API_PORT = port;
+    if (promptTemplate) process.env.THOTH_PROMPT_TEMPLATE = promptTemplate;
 }
 
 // Handle --help flag
@@ -152,7 +173,12 @@ if (args.includes('--service')) {
 };
 
 // Default action for a single file
-const filePath = args[0];
+const filePath = getPositionalArgs()[0];
+if (!filePath) {
+    console.error('Usage: node thoth.js [provider options] <path_to_file>');
+    process.exitCode = 1;
+    return;
+}
 fs.readFile(filePath, { encoding: 'utf8' }, (err, data) => {
     if (err) {
         console.error(`Error reading file from disk: ${err}`);
