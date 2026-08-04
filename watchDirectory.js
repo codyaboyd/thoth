@@ -1,7 +1,13 @@
 const fs = require('fs');
 const crypto = require('crypto');
 const path = require('path');
-const { getLanguageFromExtension, isValidFileType, getMarkdownPathFromRelativePath } = require('./utils.js');
+const {
+    getLanguageFromExtension,
+    isValidFileType,
+    getMarkdownPathFromRelativePath,
+    isPythonVirtualEnvironment,
+    isInsidePythonVirtualEnvironment,
+} = require('./utils.js');
 const { generateDocumentation, DEFAULT_BASE_PROMPT } = require('./aiClient.js');
 
 class DocumentationGenerator {
@@ -19,6 +25,7 @@ class DocumentationGenerator {
             if (!filename || !isValidFileType(filename)) return;
             if (filename.includes('node_modules')) return;
             const filePath = path.join(directoryPath, filename);
+            if (isInsidePythonVirtualEnvironment(path.dirname(filePath), directoryPath)) return;
             this.enqueueFile(filePath, directoryPath);
         });
     }
@@ -29,6 +36,7 @@ class DocumentationGenerator {
             const fullPath = path.join(currentPath, entry.name);
             if (fullPath.includes('node_modules')) continue;
             if (entry.isDirectory()) {
+                if (isPythonVirtualEnvironment(fullPath)) continue;
                 await this.initialScan(fullPath, rootPath);
             } else if (entry.isFile() && isValidFileType(entry.name)) {
                 this.enqueueFile(fullPath, rootPath);

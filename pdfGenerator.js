@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
-const { getLanguageFromExtension, isValidFileType } = require('./utils.js');
+const { getLanguageFromExtension, isValidFileType, isPythonVirtualEnvironment } = require('./utils.js');
 const { generateDocumentation, DEFAULT_BASE_PROMPT } = require('./aiClient.js');
 
 const SKIPPED_DIRECTORIES = new Set(['.git', 'node_modules', 'docs', 'coverage', 'dist', 'build']);
@@ -147,7 +147,7 @@ async function collectCodeFiles(rootPath, currentPath = rootPath) {
     for (const entry of entries) {
         if (entry.isSymbolicLink()) continue;
         const fullPath = path.join(currentPath, entry.name);
-        if (entry.isDirectory() && !SKIPPED_DIRECTORIES.has(entry.name) && !entry.name.startsWith('.')) {
+        if (entry.isDirectory() && !SKIPPED_DIRECTORIES.has(entry.name) && !entry.name.startsWith('.') && !isPythonVirtualEnvironment(fullPath)) {
             files.push(...await collectCodeFiles(rootPath, fullPath));
         } else if (entry.isFile() && isValidFileType(entry.name)) {
             files.push(fullPath);

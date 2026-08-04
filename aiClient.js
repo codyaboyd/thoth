@@ -22,6 +22,7 @@ const PROMPT_TEMPLATES = {
 // top-k 40 / top-p 0.9 combination.
 const LOCAL_SAMPLING_SETTINGS = Object.freeze({
     [PROMPT_TEMPLATES.MISTRAL]: Object.freeze({
+        n_predict: -1,
         temperature: 0.3,
         top_k: 40,
         top_p: 0.9,
@@ -29,6 +30,7 @@ const LOCAL_SAMPLING_SETTINGS = Object.freeze({
         repeat_penalty: 1.1,
     }),
     [PROMPT_TEMPLATES.QWEN]: Object.freeze({
+        n_predict: -1,
         temperature: 0.7,
         top_k: 20,
         top_p: 0.8,

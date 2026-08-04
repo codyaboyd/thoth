@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 
 const LANGUAGE_BY_EXTENSION = {
     '.js': 'JavaScript',
@@ -61,8 +62,28 @@ function getMarkdownPathFromRelativePath(relativePath) {
     return relativePath.replace(/\.[^.]+$/, '.md');
 }
 
+function isPythonVirtualEnvironment(directoryPath) {
+    return fs.existsSync(path.join(directoryPath, 'bin', 'activate'));
+}
+
+function isInsidePythonVirtualEnvironment(filePath, rootPath) {
+    const resolvedRoot = path.resolve(rootPath);
+    let directoryPath = path.resolve(filePath);
+
+    while (directoryPath === resolvedRoot || !path.relative(resolvedRoot, directoryPath).startsWith('..')) {
+        if (isPythonVirtualEnvironment(directoryPath)) return true;
+        if (directoryPath === resolvedRoot) break;
+        const parentPath = path.dirname(directoryPath);
+        if (parentPath === directoryPath) break;
+        directoryPath = parentPath;
+    }
+    return false;
+}
+
 module.exports = {
     getLanguageFromExtension,
     isValidFileType,
     getMarkdownPathFromRelativePath,
+    isPythonVirtualEnvironment,
+    isInsidePythonVirtualEnvironment,
 };
