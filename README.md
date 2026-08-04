@@ -159,7 +159,8 @@ from recursive directory, PDF, and watcher scans, regardless of the environment 
 node thoth.js --pdf <path_to_directory> \\
   --title "Platform Engineering Handbook" \\
   --organization "Example Corporation" \\
-  --output ./artifacts/platform-handbook.pdf
+  --output ./artifacts/platform-handbook.pdf \\
+  --report-date 04082026
 ```
 
 The PDF mode recursively discovers supported code files, skipping common generated and dependency
@@ -167,7 +168,7 @@ directories (including `.git`, `node_modules`, `docs`, `coverage`, `dist`, and `
 professional document with a branded cover, a project-structure index immediately after the cover,
 per-file AI-generated explanations, running headers, and page numbers. Source code is used as input
 for documentation generation but is not reproduced in the PDF. `--title` and `--organization` are required;
-`--output` defaults to `<path_to_directory>/codebase-documentation.pdf`. With the local provider,
+`--output` defaults to `<path_to_directory>/codebase-documentation.pdf`. Use `--report-date <ddmmyyyy>` to manually set the generated report date shown on the cover; when omitted, Thoth uses today's date. With the local provider,
 PDF generation streams each llamafile response and periodically reports the number of characters
 received, so long-running files continue to show visible progress.
 

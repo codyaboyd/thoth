@@ -22,7 +22,7 @@ function printHelp() {
      node thoth.js --directory <path_to_directory>
 
     Generate one complete codebase PDF:
-     node thoth.js --pdf <path> --title <title> --organization <name> [--output <file.pdf>]
+     node thoth.js --pdf <path> --title <title> --organization <name> [--output <file.pdf>] [--report-date <ddmmyyyy>]
 
     Start a watcher service to automatically manage documentation:
      node thoth.js --service <path_to_directory>
@@ -55,7 +55,7 @@ function getArgValue(flag) {
 
 function getPositionalArgs() {
     const flagsWithValues = new Set([
-        '--directory', '--pdf', '--title', '--organization', '--output', '--service',
+        '--directory', '--pdf', '--title', '--organization', '--output', '--report-date', '--service',
         '--provider', '--model', '--api-key', '--host', '--port', '--prompt-template',
     ]);
     const positionalArgs = [];
@@ -101,11 +101,12 @@ if (args.includes('--pdf')) {
     const title = getArgValue('--title');
     const organization = getArgValue('--organization');
     const outputPath = getArgValue('--output');
+    const reportDate = getArgValue('--report-date');
     if (!directoryPath || !title || !organization) {
-        console.error('Usage: node thoth.js --pdf <path> --title <title> --organization <name> [--output <file.pdf>]');
+        console.error('Usage: node thoth.js --pdf <path> --title <title> --organization <name> [--output <file.pdf>] [--report-date <ddmmyyyy>]');
         process.exitCode = 1;
     } else {
-        generatePdfForDirectory(directoryPath, { title, organization, outputPath })
+        generatePdfForDirectory(directoryPath, { title, organization, outputPath, reportDate })
             .then(result => console.log(`PDF documentation complete: ${result.outputPath} (${result.fileCount} files, ${result.pageCount} pages)`))
             .catch(error => {
                 console.error(`Error generating PDF documentation: ${error.message}`);
