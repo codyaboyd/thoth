@@ -90,7 +90,7 @@ for (const promptTemplate of ['mistral', 'qwen']) {
         });
 
         for (const [setting, value] of Object.entries(LOCAL_SAMPLING_SETTINGS[promptTemplate])) {
-            assert.equal(requestBody[setting], value);
+            assert.deepEqual(requestBody[setting], value);
         }
     });
 }

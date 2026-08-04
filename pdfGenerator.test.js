@@ -4,13 +4,19 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
-const { formatProjectStructure, generatePdfForDirectory, sanitizeGeneratedResponse } = require('./pdfGenerator.js');
+const { formatProjectStructure, formatReportDate, generatePdfForDirectory, sanitizeGeneratedResponse } = require('./pdfGenerator.js');
 
 test('removes end-of-message tokens from generated responses', () => {
     assert.equal(
         sanitizeGeneratedResponse('Overview<|imend|>\nDetails<|imend|>'),
         'Overview\nDetails',
     );
+});
+
+test('formats manually entered report dates from ddmmyyyy', () => {
+    assert.equal(formatReportDate('04082026'), '2026-08-04');
+    assert.throws(() => formatReportDate('20260804'), /ddmmyyyy/);
+    assert.throws(() => formatReportDate('31022026'), /valid calendar date/);
 });
 
 test('formats discovered files as a directory-first project tree', () => {
@@ -44,12 +50,14 @@ test('places the project structure after the cover and excludes source code', as
         title: 'Test project',
         organization: 'Test organization',
         outputPath,
+        reportDate: '04082026',
         generate: async () => '## Purpose\nGenerated documentation only.<|imend|>',
     });
 
     const pdf = fs.readFileSync(outputPath, 'latin1');
     assert.equal(result.pageCount, 3);
     assert.ok(pdf.indexOf('Project structure') < pdf.indexOf('Generated documentation only.'));
+    assert.match(pdf, /Generated 2026-08-04/);
     assert.match(pdf, /src\//);
     assert.match(pdf, /app\.js/);
     assert.doesNotMatch(pdf, /PRIVATE_SOURCE_SENTINEL|Source code|<\|imend\|>/);

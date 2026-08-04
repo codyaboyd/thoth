@@ -10,8 +10,29 @@ function sanitizeGeneratedResponse(response) {
     return String(response ?? '').replace(END_OF_MESSAGE_TOKEN_PATTERN, '');
 }
 
-function sanitizeGeneratedResponse(response) {
-    return String(response ?? '').replace(/<\|imend\|>/g, '');
+function formatReportDate(value = new Date()) {
+    if (value instanceof Date) {
+        return value.toISOString().slice(0, 10);
+    }
+
+    if (typeof value !== 'string' || !/^\d{8}$/.test(value)) {
+        throw new Error('Report date must use ddmmyyyy format.');
+    }
+
+    const day = Number(value.slice(0, 2));
+    const month = Number(value.slice(2, 4));
+    const year = Number(value.slice(4, 8));
+    const parsed = new Date(Date.UTC(year, month - 1, day));
+
+    if (
+        parsed.getUTCFullYear() !== year
+        || parsed.getUTCMonth() !== month - 1
+        || parsed.getUTCDate() !== day
+    ) {
+        throw new Error('Report date must be a valid calendar date in ddmmyyyy format.');
+    }
+
+    return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
 function pdfEscape(value) {
@@ -192,13 +213,15 @@ function formatProjectStructure(rootPath, files) {
     return lines;
 }
 
-async function generatePdfForDirectory(directoryPath, { title, organization, outputPath, generate = generateDocumentation } = {}) {
+async function generatePdfForDirectory(directoryPath, { title, organization, outputPath, reportDate, generate = generateDocumentation } = {}) {
     if (!title || !organization) throw new Error('Both title and organization are required.');
     const rootPath = path.resolve(directoryPath);
     const stat = await fs.stat(rootPath);
     if (!stat.isDirectory()) throw new Error(`Not a directory: ${directoryPath}`);
     const files = await collectCodeFiles(rootPath);
     if (!files.length) throw new Error(`No supported code files found in ${directoryPath}`);
+
+    const formattedReportDate = formatReportDate(reportDate);
 
     const document = new PdfDocument(title, organization);
     document.addPage('Cover');
@@ -208,7 +231,7 @@ async function generatePdfForDirectory(directoryPath, { title, organization, out
     document.line(54, document.y, 240, document.y, [0.10, 0.55, 0.70]);
     document.y -= 28;
     document.block('CODEBASE DOCUMENTATION', { size: 11, color: [0.35, 0.40, 0.44], after: 8 });
-    document.block(`${files.length} source files | Generated ${new Date().toISOString().slice(0, 10)}`, { size: 10, color: [0.35, 0.40, 0.44] });
+    document.block(`${files.length} source files | Generated ${formattedReportDate}`, { size: 10, color: [0.35, 0.40, 0.44] });
 
     document.addPage('Project index');
     document.heading('Project structure');
@@ -247,4 +270,4 @@ async function generatePdfForDirectory(directoryPath, { title, organization, out
     return { outputPath: destination, fileCount: files.length, pageCount: document.pages.length };
 }
 
-module.exports = { collectCodeFiles, formatProjectStructure, generatePdfForDirectory, PdfDocument, sanitizeGeneratedResponse };
+module.exports = { collectCodeFiles, formatProjectStructure, formatReportDate, generatePdfForDirectory, PdfDocument, sanitizeGeneratedResponse };
