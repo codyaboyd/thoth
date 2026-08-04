@@ -4,9 +4,10 @@ const { getLanguageFromExtension, isValidFileType, isPythonVirtualEnvironment } 
 const { generateDocumentation, DEFAULT_BASE_PROMPT } = require('./aiClient.js');
 
 const SKIPPED_DIRECTORIES = new Set(['.git', 'node_modules', 'docs', 'coverage', 'dist', 'build']);
+const END_OF_MESSAGE_TOKEN_PATTERN = /<\|\s*im[\s_]*end\s*\|>/gi;
 
 function sanitizeGeneratedResponse(response) {
-    return String(response ?? '').replace(/<\|\s*im[\s_]*end\s*\|>/gi, '');
+    return String(response ?? '').replace(END_OF_MESSAGE_TOKEN_PATTERN, '');
 }
 
 function pdfEscape(value) {

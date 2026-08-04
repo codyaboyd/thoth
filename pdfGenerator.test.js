@@ -6,10 +6,10 @@ const test = require('node:test');
 
 const { formatProjectStructure, generatePdfForDirectory, sanitizeGeneratedResponse } = require('./pdfGenerator.js');
 
-test('removes end-of-message tokens from generated responses', () => {
+test('removes im_end end-of-message tokens from generated responses', () => {
     assert.equal(
-        sanitizeGeneratedResponse('Overview<|imend|>\nDetails<|im_end|>\nDone<| im end |>'),
-        'Overview\nDetails\nDone',
+        sanitizeGeneratedResponse('Overview<|im_end|>\nDetails<|imend|>\nDone<| im end |>\nFinal<|IM_END|>'),
+        'Overview\nDetails\nDone\nFinal',
     );
 });
 
