@@ -20,7 +20,7 @@ It supports major code file types across common ecosystems, including:
 
 - Generates docs for a **single file** (prints Markdown to stdout).
 - Generates docs for an **entire directory** (writes `.md` files under a `docs/` folder).
-- Generates a polished, single **codebase PDF** containing AI documentation and source for every supported file.
+- Generates a polished, single **codebase PDF** containing AI documentation for every supported file.
 - Runs a **watch service** that regenerates docs when supported files change.
 - Prints each LLM response to stdout for generation progress and debugging.
 - Downloads and starts the local AI model binary used for inference.
@@ -164,8 +164,9 @@ node thoth.js --pdf <path_to_directory> \\
 
 The PDF mode recursively discovers supported code files, skipping common generated and dependency
 directories (including `.git`, `node_modules`, `docs`, `coverage`, `dist`, and `build`). It creates one
-professional document with a branded cover, contents, per-file AI-generated explanations, complete
-source listings, running headers, and page numbers. `--title` and `--organization` are required;
+professional document with a branded cover, a project-structure index immediately after the cover,
+per-file AI-generated explanations, running headers, and page numbers. Source code is used as input
+for documentation generation but is not reproduced in the PDF. `--title` and `--organization` are required;
 `--output` defaults to `<path_to_directory>/codebase-documentation.pdf`. With the local provider,
 PDF generation streams each llamafile response and periodically reports the number of characters
 received, so long-running files continue to show visible progress.
