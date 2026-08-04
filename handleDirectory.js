@@ -1,6 +1,11 @@
 const fs = require('fs').promises;
 const path = require('path');
-const { getLanguageFromExtension, isValidFileType, getMarkdownPathFromRelativePath } = require('./utils.js');
+const {
+    getLanguageFromExtension,
+    isValidFileType,
+    getMarkdownPathFromRelativePath,
+    isPythonVirtualEnvironment,
+} = require('./utils.js');
 const { generateDocumentation, DEFAULT_BASE_PROMPT } = require('./aiClient.js');
 
 class DocumentationGenerator {
@@ -19,6 +24,7 @@ class DocumentationGenerator {
         for (const entry of entries) {
             const fullPath = path.join(currentPath, entry.name);
             if (entry.isDirectory()) {
+                if (isPythonVirtualEnvironment(fullPath)) continue;
                 await this.processDirectory(fullPath, rootPath);
             } else if (entry.isFile() && isValidFileType(entry.name)) {
                 try {

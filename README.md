@@ -121,10 +121,12 @@ Supported values are `mistral` (the default; `mistral-instruct` is also accepted
 Cloud providers use their native chat APIs and do not wrap prompts in either local-model format.
 
 Thoth also selects a tuned llama.cpp/llamafile sampling profile for the chosen template. Mistral uses
-`temperature=0.3`, `top_k=40`, `top_p=0.9`, `min_p=0.05`, and `repeat_penalty=1.1` for focused,
+`n_predict=-1`, `temperature=0.3`, `top_k=40`, `top_p=0.9`, `min_p=0.05`, and `repeat_penalty=1.1` for focused,
 repeatable documentation. Qwen uses `temperature=0.7`, `top_k=20`, `top_p=0.8`, `min_p=0`, and
 `repeat_penalty=1.05`, which preserves Qwen's preferred sampling range while discouraging repeated
-text. These values are sent with every local `/completion` request; cloud providers remain unaffected.
+text. The `n_predict=-1` setting lets llama.cpp/llamafile generate up to the model context's maximum
+rather than imposing an arbitrary output-token cap. These values are sent with every local
+`/completion` request; cloud providers remain unaffected.
 
 ### Generate docs for one file
 
@@ -147,6 +149,9 @@ For each supported source file, Thoth writes Markdown to:
 ```
 
 Example: `src/app.js` → `docs/src/app.md`
+
+Python virtual environments are detected by their `<environment>/bin/activate` file and excluded
+from recursive directory, PDF, and watcher scans, regardless of the environment directory's name.
 
 ### Generate a complete codebase PDF
 
