@@ -23,7 +23,7 @@ It supports major code file types across common ecosystems, including:
 - Generates a polished, single **codebase PDF** containing AI documentation for every supported file.
 - Runs a **watch service** that regenerates docs when supported files change.
 - Prints each LLM response to stdout for generation progress and debugging.
-- Downloads and starts the local AI model binary used for inference.
+- Downloads the local AI model binary from Hugging Face and starts it for inference.
 
 ---
 
@@ -31,7 +31,7 @@ It supports major code file types across common ecosystems, including:
 
 - Node.js 18+
 - A Unix-like shell (for `chmod`)
-- Enough free disk space for the model download (several GB)
+- Enough free disk space for the Hugging Face model download (several GB)
 
 ---
 
@@ -209,7 +209,7 @@ Outputs include `thoth` (Linux/macOS) or `thoth.exe` (Windows).
 - **`m7q5: Permission denied`**
   - Run `chmod u+x m7q5` and try again.
 - **Large model download seems slow**
-  - This is expected; retries/fallback logic is built into `--download`.
+  - This is expected; `--download` fetches the multi-GB `m7q5` binary from Hugging Face.
 
 ---
 
