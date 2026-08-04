@@ -4,7 +4,7 @@ const https = require('https');
 
 function downloadFileHF() {
   return new Promise((resolve, reject) => {
-    const modelUrl = 'https://huggingface.co/bitcloud/Mistral-7b-InstructV2-Q5K-API-Llamafile/resolve/main/m7q5';
+    const modelUrl = 'https://huggingface.co/bitcloud/M7Q5/resolve/main/m7q5';
     const outputPath = path.join(__dirname, './m7q5');
 
     const download = (url) => {
