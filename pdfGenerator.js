@@ -5,6 +5,10 @@ const { generateDocumentation, DEFAULT_BASE_PROMPT } = require('./aiClient.js');
 
 const SKIPPED_DIRECTORIES = new Set(['.git', 'node_modules', 'docs', 'coverage', 'dist', 'build']);
 
+function sanitizeGeneratedResponse(response) {
+    return String(response ?? '').replace(/<\|\s*im[\s_]*end\s*\|>/gi, '');
+}
+
 function pdfEscape(value) {
     return String(value)
         .normalize('NFKD')
@@ -229,7 +233,7 @@ async function generatePdfForDirectory(directoryPath, { title, organization, out
         document.block(`FILE ${String(index + 1).padStart(2, '0')} / ${String(files.length).padStart(2, '0')}`, { size: 8, font: 'bold', color: [0.10, 0.55, 0.70], after: 4 });
         document.heading(relativePath);
         document.block(`${language} | ${source.split(/\r?\n/).length} lines`, { size: 9, color: [0.38, 0.43, 0.48], after: 12 });
-        document.markdown(documentation);
+        document.markdown(sanitizeGeneratedResponse(documentation));
     }
 
     const destination = path.resolve(outputPath || path.join(rootPath, 'codebase-documentation.pdf'));
@@ -238,4 +242,4 @@ async function generatePdfForDirectory(directoryPath, { title, organization, out
     return { outputPath: destination, fileCount: files.length, pageCount: document.pages.length };
 }
 
-module.exports = { collectCodeFiles, formatProjectStructure, generatePdfForDirectory, PdfDocument };
+module.exports = { collectCodeFiles, formatProjectStructure, generatePdfForDirectory, PdfDocument, sanitizeGeneratedResponse };
