@@ -4,7 +4,7 @@ const { spawn } = require('child_process');
 const generateDocumentationForDirectory = require('./handleDirectory.js');
 const watchDirectory = require('./watchDirectory.js');
 const { generateForSingleFile } = require('./singleGen.js');
-const { reassembleModel, downloadFileHF } = require('./getModel.js');
+const { downloadFileHF } = require('./getModel.js');
 const { generatePdfForDirectory } = require('./pdfGenerator.js');
 
 // Process command line arguments
@@ -30,7 +30,7 @@ function printHelp() {
     Generate documentation for a single file:
      node thoth.js <path_to_file>
 
-    Download AI model from IPFS (Slow):
+    Download AI model from Hugging Face:
      node thoth.js --download
 
     Start AI model service:
@@ -119,17 +119,13 @@ if (args.includes('--pdf')) {
 // Handle --download flag
 if (args.includes('--download')) {
     downloadFileHF()
-    .then(() => {
-        console.log('Direct model download complete.');
-    })
-    .catch((error) => {
-        console.error(`Direct download failed: ${error.message}. Attempting reassembly...`);
-        reassembleModel().then(() => {
-            console.log('Model download and reassembly complete.');
-        }).catch((reassembleError) => {
-            console.error(`Error during reassembly: ${reassembleError.message}`);
+        .then(() => {
+            console.log('Hugging Face model download complete.');
+        })
+        .catch((error) => {
+            console.error(`Hugging Face download failed: ${error.message}`);
+            process.exitCode = 1;
         });
-    });
     return;
 };
 
