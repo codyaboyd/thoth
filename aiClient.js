@@ -16,6 +16,27 @@ const PROMPT_TEMPLATES = {
     QWEN: 'qwen',
 };
 
+// These profiles favor accurate, repeatable documentation while retaining enough
+// sampling diversity to avoid terse or incomplete answers. Qwen benefits from a
+// narrower candidate set, while Mistral is more reliable with the conventional
+// top-k 40 / top-p 0.9 combination.
+const LOCAL_SAMPLING_SETTINGS = Object.freeze({
+    [PROMPT_TEMPLATES.MISTRAL]: Object.freeze({
+        temperature: 0.3,
+        top_k: 40,
+        top_p: 0.9,
+        min_p: 0.05,
+        repeat_penalty: 1.1,
+    }),
+    [PROMPT_TEMPLATES.QWEN]: Object.freeze({
+        temperature: 0.7,
+        top_k: 20,
+        top_p: 0.8,
+        min_p: 0,
+        repeat_penalty: 1.05,
+    }),
+});
+
 const PROVIDERS = {
     LOCAL: 'local',
     OPENAI: 'openai',
@@ -94,9 +115,14 @@ function resolveConfig({
     };
 }
 
-function requestCompletion(prompt, { host = DEFAULT_HOST, port = DEFAULT_PORT, onProgress } = {}) {
+function requestCompletion(prompt, {
+    host = DEFAULT_HOST,
+    port = DEFAULT_PORT,
+    onProgress,
+    samplingSettings = LOCAL_SAMPLING_SETTINGS[DEFAULT_PROMPT_TEMPLATE],
+} = {}) {
     const streaming = typeof onProgress === 'function';
-    const postData = JSON.stringify({ prompt, stream: streaming });
+    const postData = JSON.stringify({ prompt, stream: streaming, ...samplingSettings });
 
     const options = {
         hostname: host,
@@ -308,7 +334,12 @@ async function generateDocumentation({
             basePrompt,
             promptTemplate: config.promptTemplate,
         });
-        response = await requestCompletion(localPrompt, { host: config.host, port: config.port, onProgress });
+        response = await requestCompletion(localPrompt, {
+            host: config.host,
+            port: config.port,
+            onProgress,
+            samplingSettings: LOCAL_SAMPLING_SETTINGS[config.promptTemplate],
+        });
     } else if (![PROVIDERS.OPENAI, PROVIDERS.CLAUDE, PROVIDERS.GEMINI, PROVIDERS.LECHAT].includes(config.provider)) {
         throw new Error(`Unsupported provider "${config.provider}". Use local|openai|claude|gemini|lechat.`);
     } else if (!config.apiKey) {
@@ -337,6 +368,7 @@ module.exports = {
     DEFAULT_PORT,
     DEFAULT_PROVIDER,
     DEFAULT_PROMPT_TEMPLATE,
+    LOCAL_SAMPLING_SETTINGS,
     PROMPT_TEMPLATES,
     buildPrompt,
     normalizePromptTemplate,
