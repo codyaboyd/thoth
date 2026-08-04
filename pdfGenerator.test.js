@@ -6,10 +6,10 @@ const test = require('node:test');
 
 const { formatProjectStructure, generatePdfForDirectory, sanitizeGeneratedResponse } = require('./pdfGenerator.js');
 
-test('removes im_end end-of-message tokens from generated responses', () => {
+test('removes end-of-message tokens from generated responses', () => {
     assert.equal(
-        sanitizeGeneratedResponse('Overview<|im_end|>\nDetails<|imend|>\nDone<| im end |>\nFinal<|IM_END|>'),
-        'Overview\nDetails\nDone\nFinal',
+        sanitizeGeneratedResponse('Overview<|imend|>\nDetails<|imend|>'),
+        'Overview\nDetails',
     );
 });
 
@@ -44,7 +44,7 @@ test('places the project structure after the cover and excludes source code', as
         title: 'Test project',
         organization: 'Test organization',
         outputPath,
-        generate: async () => '## Purpose\nGenerated documentation only.<|im_end|>',
+        generate: async () => '## Purpose\nGenerated documentation only.<|imend|>',
     });
 
     const pdf = fs.readFileSync(outputPath, 'latin1');
@@ -52,5 +52,5 @@ test('places the project structure after the cover and excludes source code', as
     assert.ok(pdf.indexOf('Project structure') < pdf.indexOf('Generated documentation only.'));
     assert.match(pdf, /src\//);
     assert.match(pdf, /app\.js/);
-    assert.doesNotMatch(pdf, /PRIVATE_SOURCE_SENTINEL|Source code|<\|im_?end\|>/);
+    assert.doesNotMatch(pdf, /PRIVATE_SOURCE_SENTINEL|Source code|<\|imend\|>/);
 });

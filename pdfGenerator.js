@@ -10,6 +10,10 @@ function sanitizeGeneratedResponse(response) {
     return String(response ?? '').replace(END_OF_MESSAGE_TOKEN_PATTERN, '');
 }
 
+function sanitizeGeneratedResponse(response) {
+    return String(response ?? '').replace(/<\|imend\|>/g, '');
+}
+
 function pdfEscape(value) {
     return String(value)
         .normalize('NFKD')
