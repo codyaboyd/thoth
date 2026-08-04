@@ -28,6 +28,7 @@ const LOCAL_SAMPLING_SETTINGS = Object.freeze({
         top_p: 0.9,
         min_p: 0.05,
         repeat_penalty: 1.1,
+        stop: '</s>',
     }),
     [PROMPT_TEMPLATES.QWEN]: Object.freeze({
         n_predict: -1,
@@ -36,6 +37,7 @@ const LOCAL_SAMPLING_SETTINGS = Object.freeze({
         top_p: 0.8,
         min_p: 0,
         repeat_penalty: 1.05,
+        stop: ['<|im_end|>','<|endoftext|>'],
     }),
 });
 
