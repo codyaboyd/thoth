@@ -156,6 +156,33 @@ async function collectCodeFiles(rootPath, currentPath = rootPath) {
     return files;
 }
 
+function formatProjectStructure(rootPath, files) {
+    const tree = {};
+    for (const file of files) {
+        const parts = path.relative(rootPath, file).split(path.sep);
+        let branch = tree;
+        for (const part of parts) {
+            branch[part] ||= {};
+            branch = branch[part];
+        }
+    }
+
+    const lines = [];
+    function visit(branch, depth = 0) {
+        const entries = Object.entries(branch).sort(([nameA, childrenA], [nameB, childrenB]) => {
+            const directoryOrder = Number(Object.keys(childrenB).length > 0) - Number(Object.keys(childrenA).length > 0);
+            return directoryOrder || nameA.localeCompare(nameB);
+        });
+        for (const [name, children] of entries) {
+            const isDirectory = Object.keys(children).length > 0;
+            lines.push(`${'  '.repeat(depth)}${isDirectory ? `${name}/` : name}`);
+            if (isDirectory) visit(children, depth + 1);
+        }
+    }
+    visit(tree);
+    return lines;
+}
+
 async function generatePdfForDirectory(directoryPath, { title, organization, outputPath, generate = generateDocumentation } = {}) {
     if (!title || !organization) throw new Error('Both title and organization are required.');
     const rootPath = path.resolve(directoryPath);
@@ -174,9 +201,10 @@ async function generatePdfForDirectory(directoryPath, { title, organization, out
     document.block('CODEBASE DOCUMENTATION', { size: 11, color: [0.35, 0.40, 0.44], after: 8 });
     document.block(`${files.length} source files | Generated ${new Date().toISOString().slice(0, 10)}`, { size: 10, color: [0.35, 0.40, 0.44] });
 
-    document.addPage('Contents');
-    document.heading('Contents');
-    files.forEach((file, index) => document.block(`${String(index + 1).padStart(2, '0')}   ${path.relative(rootPath, file)}`, { size: 9, leading: 14 }));
+    document.addPage('Project index');
+    document.heading('Project structure');
+    document.block('Index of supported source files included in this documentation.', { size: 9, color: [0.38, 0.43, 0.48], after: 10 });
+    formatProjectStructure(rootPath, files).forEach(line => document.block(line, { size: 9, leading: 14, font: 'mono' }));
 
     for (let index = 0; index < files.length; index += 1) {
         const file = files[index];
@@ -202,8 +230,6 @@ async function generatePdfForDirectory(directoryPath, { title, organization, out
         document.heading(relativePath);
         document.block(`${language} | ${source.split(/\r?\n/).length} lines`, { size: 9, color: [0.38, 0.43, 0.48], after: 12 });
         document.markdown(documentation);
-        document.heading('Source code', 2);
-        document.markdown(`\`\`\`${language.toLowerCase()}\n${source}\n\`\`\``);
     }
 
     const destination = path.resolve(outputPath || path.join(rootPath, 'codebase-documentation.pdf'));
@@ -212,4 +238,4 @@ async function generatePdfForDirectory(directoryPath, { title, organization, out
     return { outputPath: destination, fileCount: files.length, pageCount: document.pages.length };
 }
 
-module.exports = { collectCodeFiles, generatePdfForDirectory, PdfDocument };
+module.exports = { collectCodeFiles, formatProjectStructure, generatePdfForDirectory, PdfDocument };
