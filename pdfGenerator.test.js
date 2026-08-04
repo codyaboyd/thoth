@@ -4,7 +4,14 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
-const { formatProjectStructure, generatePdfForDirectory } = require('./pdfGenerator.js');
+const { formatProjectStructure, generatePdfForDirectory, sanitizeGeneratedResponse } = require('./pdfGenerator.js');
+
+test('removes end-of-message tokens from generated responses', () => {
+    assert.equal(
+        sanitizeGeneratedResponse('Overview<|imend|>\nDetails<|imend|>'),
+        'Overview\nDetails',
+    );
+});
 
 test('formats discovered files as a directory-first project tree', () => {
     const rootPath = path.resolve('/example/project');
@@ -37,7 +44,7 @@ test('places the project structure after the cover and excludes source code', as
         title: 'Test project',
         organization: 'Test organization',
         outputPath,
-        generate: async () => '## Purpose\nGenerated documentation only.',
+        generate: async () => '## Purpose\nGenerated documentation only.<|imend|>',
     });
 
     const pdf = fs.readFileSync(outputPath, 'latin1');
@@ -45,5 +52,5 @@ test('places the project structure after the cover and excludes source code', as
     assert.ok(pdf.indexOf('Project structure') < pdf.indexOf('Generated documentation only.'));
     assert.match(pdf, /src\//);
     assert.match(pdf, /app\.js/);
-    assert.doesNotMatch(pdf, /PRIVATE_SOURCE_SENTINEL|Source code/);
+    assert.doesNotMatch(pdf, /PRIVATE_SOURCE_SENTINEL|Source code|<\|imend\|>/);
 });
