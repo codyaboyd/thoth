@@ -184,11 +184,18 @@ async function generatePdfForDirectory(directoryPath, { title, organization, out
         const source = await fs.readFile(file, 'utf8');
         const language = getLanguageFromExtension(file);
         console.log(`[${index + 1}/${files.length}] Documenting ${relativePath}`);
+        let lastProgressAt = 0;
         const documentation = await generate({
             fileContent: source,
             language,
             filePath: relativePath,
             basePrompt: `${DEFAULT_BASE_PROMPT} Produce a professional overview covering purpose, key components, control flow, dependencies, and notable implementation details.`,
+            onProgress: ({ content }) => {
+                const now = Date.now();
+                if (now - lastProgressAt < 1000) return;
+                lastProgressAt = now;
+                console.log(`[${index + 1}/${files.length}] Receiving ${relativePath} (${content.length} characters)`);
+            },
         });
         document.addPage(relativePath);
         document.block(`FILE ${String(index + 1).padStart(2, '0')} / ${String(files.length).padStart(2, '0')}`, { size: 8, font: 'bold', color: [0.10, 0.55, 0.70], after: 4 });

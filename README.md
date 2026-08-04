@@ -155,7 +155,9 @@ The PDF mode recursively discovers supported code files, skipping common generat
 directories (including `.git`, `node_modules`, `docs`, `coverage`, `dist`, and `build`). It creates one
 professional document with a branded cover, contents, per-file AI-generated explanations, complete
 source listings, running headers, and page numbers. `--title` and `--organization` are required;
-`--output` defaults to `<path_to_directory>/codebase-documentation.pdf`.
+`--output` defaults to `<path_to_directory>/codebase-documentation.pdf`. With the local provider,
+PDF generation streams each llamafile response and periodically reports the number of characters
+received, so long-running files continue to show visible progress.
 
 ### Run watcher service
 

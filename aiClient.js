@@ -94,8 +94,9 @@ function resolveConfig({
     };
 }
 
-function requestCompletion(prompt, { host = DEFAULT_HOST, port = DEFAULT_PORT } = {}) {
-    const postData = JSON.stringify({ prompt });
+function requestCompletion(prompt, { host = DEFAULT_HOST, port = DEFAULT_PORT, onProgress } = {}) {
+    const streaming = typeof onProgress === 'function';
+    const postData = JSON.stringify({ prompt, stream: streaming });
 
     const options = {
         hostname: host,
@@ -111,17 +112,53 @@ function requestCompletion(prompt, { host = DEFAULT_HOST, port = DEFAULT_PORT } 
     return new Promise((resolve, reject) => {
         const req = http.request(options, (res) => {
             let rawData = '';
-            res.on('data', (chunk) => { rawData += chunk; });
+            let content = '';
+            let settled = false;
+
+            const finish = (callback, value) => {
+                if (settled) return;
+                settled = true;
+                callback(value);
+            };
+
+            res.setEncoding('utf8');
+            res.on('data', (chunk) => {
+                rawData += chunk;
+                if (!streaming || res.statusCode < 200 || res.statusCode >= 300) return;
+
+                const lines = rawData.split(/\r?\n/);
+                rawData = lines.pop();
+                for (const line of lines) {
+                    if (!line.startsWith('data:')) continue;
+                    const data = line.slice(5).trim();
+                    if (!data || data === '[DONE]') continue;
+                    try {
+                        const parsed = JSON.parse(data);
+                        const token = parsed.content || parsed.response || parsed.text || '';
+                        if (token) {
+                            content += token;
+                            onProgress({ content, token });
+                        }
+                    } catch (_) {
+                        // Ignore malformed events without preventing later, valid
+                        // streaming events from being read.
+                    }
+                }
+            });
             res.on('end', () => {
                 if (res.statusCode < 200 || res.statusCode >= 300) {
-                    reject(new Error(`Local provider request failed (${res.statusCode}): ${rawData}`));
+                    finish(reject, new Error(`Local provider request failed (${res.statusCode}): ${rawData}`));
+                    return;
+                }
+                if (streaming) {
+                    finish(resolve, content);
                     return;
                 }
                 try {
                     const parsedData = JSON.parse(rawData);
-                    resolve(parsedData.content || parsedData.response || parsedData.text || '');
+                    finish(resolve, parsedData.content || parsedData.response || parsedData.text || '');
                 } catch (error) {
-                    reject(new Error(`Error parsing response: ${error.message}`));
+                    finish(reject, new Error(`Error parsing response: ${error.message}`));
                 }
             });
         });
@@ -258,6 +295,7 @@ async function generateDocumentation({
     host,
     port,
     promptTemplate,
+    onProgress,
 }) {
     const config = resolveConfig({ provider, model, apiKey, host, port, promptTemplate });
     let response;
@@ -270,7 +308,7 @@ async function generateDocumentation({
             basePrompt,
             promptTemplate: config.promptTemplate,
         });
-        response = await requestCompletion(localPrompt, { host: config.host, port: config.port });
+        response = await requestCompletion(localPrompt, { host: config.host, port: config.port, onProgress });
     } else if (![PROVIDERS.OPENAI, PROVIDERS.CLAUDE, PROVIDERS.GEMINI, PROVIDERS.LECHAT].includes(config.provider)) {
         throw new Error(`Unsupported provider "${config.provider}". Use local|openai|claude|gemini|lechat.`);
     } else if (!config.apiKey) {
