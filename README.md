@@ -120,6 +120,12 @@ node thoth.js --directory ./src
 Supported values are `mistral` (the default; `mistral-instruct` is also accepted) and `qwen`.
 Cloud providers use their native chat APIs and do not wrap prompts in either local-model format.
 
+Thoth also selects a tuned llama.cpp/llamafile sampling profile for the chosen template. Mistral uses
+`temperature=0.3`, `top_k=40`, `top_p=0.9`, `min_p=0.05`, and `repeat_penalty=1.1` for focused,
+repeatable documentation. Qwen uses `temperature=0.7`, `top_k=20`, `top_p=0.8`, `min_p=0`, and
+`repeat_penalty=1.05`, which preserves Qwen's preferred sampling range while discouraging repeated
+text. These values are sent with every local `/completion` request; cloud providers remain unaffected.
+
 ### Generate docs for one file
 
 ```bash

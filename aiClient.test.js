@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const http = require('node:http');
 const test = require('node:test');
 
-const { generateDocumentation } = require('./aiClient.js');
+const { generateDocumentation, LOCAL_SAMPLING_SETTINGS } = require('./aiClient.js');
 
 test('generateDocumentation reports streamed local completion progress', async (t) => {
     const server = http.createServer((request, response) => {
@@ -60,3 +60,37 @@ test('generateDocumentation prints the LLM response to stdout and returns it', a
     assert.equal(result, 'Generated documentation');
     assert.deepEqual(messages, ['[local] LLM response for answer.js:\nGenerated documentation']);
 });
+
+for (const promptTemplate of ['mistral', 'qwen']) {
+    test(`generateDocumentation uses tuned ${promptTemplate} local sampling settings`, async (t) => {
+        let requestBody;
+        const server = http.createServer((request, response) => {
+            let body = '';
+            request.on('data', (chunk) => { body += chunk; });
+            request.on('end', () => {
+                requestBody = JSON.parse(body);
+                response.writeHead(200, { 'Content-Type': 'application/json' });
+                response.end(JSON.stringify({ content: 'Done' }));
+            });
+        });
+        await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+        t.after(() => new Promise((resolve) => server.close(resolve)));
+
+        const originalLog = console.log;
+        console.log = () => {};
+        t.after(() => { console.log = originalLog; });
+
+        await generateDocumentation({
+            fileContent: 'const answer = 42;',
+            language: 'JavaScript',
+            filePath: 'answer.js',
+            host: '127.0.0.1',
+            port: server.address().port,
+            promptTemplate,
+        });
+
+        for (const [setting, value] of Object.entries(LOCAL_SAMPLING_SETTINGS[promptTemplate])) {
+            assert.equal(requestBody[setting], value);
+        }
+    });
+}
